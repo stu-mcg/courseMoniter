@@ -1,6 +1,6 @@
 FROM node:15
 ENV NODE_ENV=production
-WORKDIR /nodeFrontEnd
+WORKDIR /node_frontend
 COPY . .
 RUN npm install --production
 CMD [ "node", "index.js" ]
