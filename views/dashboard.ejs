@@ -1,0 +1,92 @@
+<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+</style>
+
+<h1>Course Moniter Dashboard</h1>
+<h3>
+	Time since last check:
+	<% 
+		var timeSinceLastCheck = (Date.now() - data.lastCheck * 1000) / 1000
+		var color = 'green'
+		if(timeSinceLastCheck > 2 * 60)
+		{
+			color = 'red'
+		}
+	%>
+	<span style = "color: <%=color%> ;"><%= Math.floor(timeSinceLastCheck) %></span>
+</h3>
+<table>
+	<tr>
+		<th>Section</th>
+		<th>Status</th>
+	</tr>
+	<% for(var i = 0; i < data.courses.length; i++) {%>
+		<tr>
+			<td><%= data.courses[i].name %></td>
+			<% 
+				var itemColor = 'red'
+				if(data.courses[i].status == 'Available')
+				{
+					itemColor = 'green'
+				}
+				else if(data.courses[i].status == 'Invalid')
+				{
+					itemColor = 'blue'
+				}
+			%>
+			<td style = "color: <%= itemColor %> "><%= data.courses[i].status %></td>
+			<td><button onclick="removeTarget(<%= data.courses[i].id %>)">remove</button></td>
+		</tr>
+	<% } %> 
+</table>
+<br>
+<table>
+	<tr>
+		<td>Department</td>
+		<td><input type="text" id="dept" size=20></td>
+	</tr>
+	<tr>
+		<td>Course</td>
+		<td><input type="text" id="course" size=20></td>
+	</tr>
+	<tr>
+		<td>Section</td>
+		<td><input type="text" id="section" size=20></td>
+	</tr>
+	<tr>
+		<td>Campus</td>
+		<td><input type="text" id="campus" size=20></td>
+	</tr>
+	<tr>
+		<td><button onclick="addTarget()">add</button></td>
+	</tr>
+</table>
+<script>
+	function removeTarget(id){
+		fetch('/remove', { 
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json;charset=utf-8' },
+			body: JSON.stringify({ 'id' : id })
+		}).then(function(res){
+			location.reload()
+		})
+	}
+	function addTarget() {
+			fetch('/add', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json;charset=utf-8' },
+				body: JSON.stringify({ 
+					'dept': document.getElementById('dept').value,
+					'course': document.getElementById('course').value,
+					'section': document.getElementById('section').value,
+					'campus': document.getElementById('campus').value
+				})
+			}).then(function(res){
+				location.reload()
+			})
+
+		}
+</script>
