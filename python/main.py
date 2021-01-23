@@ -18,25 +18,30 @@ alert_phone_number = os.environ['ALERT_PHONE_NUMBER']
 client = Client(account_sid, auth_token)
 
 import psycopg2
-dbConnection = psycopg2.connect(
-	host = "localhost",
-	database = "course_moniter",
-	user = "postgres",
-	port = 5432
-)
-database = dbConnection.cursor()
 
 def main():
 	while(True):
-		database.execute("SELECT * FROM courses")
-		targets = database.fetchall()
-		changes = check(targets) #this take some time
-		for change in changes:
-			database.execute("UPDATE courses SET status = %s WHERE id = %s", [change['status'], change['id']])
+		try:
+			dbConnection = psycopg2.connect(
+				host="postgres",
+				database="course_moniter",
+				user="postgres",
+				port=5432
+            )
+			database = dbConnection.cursor()
+			database.execute("SELECT * FROM courses")
+			targets = database.fetchall()
+			changes = check(targets) #this take some time
+			for change in changes:
+				database.execute("UPDATE courses SET status = %s WHERE id = %s", [change['status'], change['id']])
+				dbConnection.commit()
+			database.execute("UPDATE stats SET value = %s WHERE stat = 'last_check'", [time.time()])
 			dbConnection.commit()
-		database.execute("UPDATE stats SET value = %s WHERE stat = 'last_check'", [time.time()])
-		dbConnection.commit()
-		time.sleep(checkInterval + random.randint(0,9))
+			time.sleep(checkInterval + random.randint(0,9))
+		except psycopg2.OperationalError:
+			print("Database connection failed. Will try again in 10 seconds")
+			time.sleep(10)
+			continue
 
 def sendAlert(message):
 	message = client.messages.create(
@@ -59,7 +64,7 @@ def check(targets):
 		try:
 			url = "https://courses.students.ubc.ca/cs/courseschedule?tname=subj-course&course=" + course + "&campuscd=" + campus + "&dept=" + dept + "&pname=subjarea"
 			page = requests.get(url)
-		except:
+		except Exception:
 			if(oldStatus != 'Invalid'):
 				sendAlert(target['section'] + ' has an invalid url')
 			continue

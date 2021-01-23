@@ -1,14 +1,18 @@
 services:
- node_frontend:
-  build:
-   context: ./node_frontend
-  ports:
-   - 3000:3000
+  node:
+    build:
+      context: ./node
+    ports:
+      - 3000:3000
 
- postgres:
-  build:
-    context: ./postgres
-  ports:
-   - 5432:5432
-  volumes:
-   - ./postgres/data:/var/lib/postgresql/data
+  postgres:
+    build:
+      context: ./postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+
+  python:
+    build:
+      context: ./python
